@@ -8,7 +8,7 @@ import UserModel from "./models/User.js";
 
 //подключаем бд с логином и паролем к blog - он авытоматически создастся
 mongoose
-    .connect('mongodb+srv://moriartynosok:ejXUIG3w@cluster0.anzyojj.mongodb.net/blog')
+    .connect('mongodb+srv://moriartynosok:ejMiQ2MErETJjG3w@cluster0.anzyojj.mongodb.net/blog')
     .then(() => console.log('DB Ok'))
     .catch((err) => console.log('DB error', err));
 
@@ -28,7 +28,25 @@ app.get('/',(reg,res) => {
 //будем отлавливать пост запрос по адресу '/auth/login'
 //когда он придет мы вытаскиваем запрос и ответ и вернем res в формате json
 
+app.post('/auth/login', async (req,res) =>{
+    try {
+        const user = await UserModel.findOne({ email: req.body.email});
+        
+        if (!user) {
+            return req.status(404).json({
+                //не надо уточнять какая часть пользователя (логин, пароль и тп не найден)
+                message: 'Пользователь не найден',
+            });
+        }
 
+        const isValidPass = await bcrypt.compare();
+        if (!isValidPass) {
+            return req.status(404).json({
+                message: 'Неверный логин или пароль',
+            });
+        }
+    } catch (err) {}
+});
 //здесь обязательно пометка async 
 app.post('/auth/register',registerValidation,async (req,res)=>{
     try{ const errors = validationResult(req);
